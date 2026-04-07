@@ -314,9 +314,9 @@ const quizData = [
   {
     "no": 1225,
     "word": "fade",
-    "meaning": "あせる",
+    "meaning": "色あせる",
     "choices": [
-      "あせる",
+      "色あせる",
       "固まる",
       "輝く",
       "広がる"
@@ -408,7 +408,7 @@ const quizData = [
     "meaning": "記録する",
     "choices": [
       "削除する",
-      "登録する",
+      "計算する",
       "記録する",
       "印刷する"
     ],
@@ -720,7 +720,7 @@ const quizData = [
     "meaning": "器具",
     "choices": [
       "装飾",
-      "楽器",
+      "指示",
       "器具",
       "部品"
     ],
