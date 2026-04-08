@@ -1,268 +1,252 @@
 if (!window.__authOK) {
-  // 誤入力・空欄・キャンセル時はクイズ初期化を行わない
+  // 認証失敗時は何も実行しない
 } else {
-const menuScreen = document.getElementById("menuScreen");
-const quizScreen = document.getElementById("quizScreen");
-const resultScreen = document.getElementById("resultScreen");
+  const menuScreen = document.getElementById('menuScreen');
+  const quizScreen = document.getElementById('quizScreen');
+  const resultScreen = document.getElementById('resultScreen');
 
-const startNumberInput = document.getElementById("startNumber");
-const endNumberInput = document.getElementById("endNumber");
-const orderedBtn = document.getElementById("orderedBtn");
-const randomBtn = document.getElementById("randomBtn");
-const startQuizBtn = document.getElementById("startQuizBtn");
+  const startInput = document.getElementById('startInput');
+  const endInput = document.getElementById('endInput');
+  const startBtn = document.getElementById('startBtn');
+  const modeButtons = Array.from(document.querySelectorAll('.modeBtn'));
 
-const progressText = document.getElementById("progressText");
-const scoreText = document.getElementById("scoreText");
-const wordText = document.getElementById("wordText");
-const wordNoText = document.getElementById("wordNoText");
-const speakBtn = document.getElementById("speakBtn");
-const choicesWrap = document.getElementById("choicesWrap");
-const feedbackPanel = document.getElementById("feedbackPanel");
-const resultBadge = document.getElementById("resultBadge");
-const correctAnswerText = document.getElementById("correctAnswerText");
-const exampleText = document.getElementById("exampleText");
-const translationText = document.getElementById("translationText");
+  const progressText = document.getElementById('progressText');
+  const progressBar = document.getElementById('progressBar');
+  const scoreText = document.getElementById('scoreText');
+  const questionNo = document.getElementById('questionNo');
+  const wordText = document.getElementById('wordText');
+  const choices = document.getElementById('choices');
+  const feedback = document.getElementById('feedback');
+  const speakBtn = document.getElementById('speakBtn');
 
-const prevBtn = document.getElementById("prevBtn");
-const nextBtn = document.getElementById("nextBtn");
-const restartSameBtn = document.getElementById("restartSameBtn");
-const restartNewBtn = document.getElementById("restartNewBtn");
-const menuBackButtons = [
-  document.getElementById("menuBackBtnTop"),
-  document.getElementById("menuBackBtnBottom"),
-  document.getElementById("menuBackBtnResult")
-];
-const restartSameResultBtn = document.getElementById("restartSameResultBtn");
-const restartNewResultBtn = document.getElementById("restartNewResultBtn");
-const finalScoreText = document.getElementById("finalScoreText");
-const finalRateText = document.getElementById("finalRateText");
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const retryRangeBtn = document.getElementById('retryRangeBtn');
+  const backMenuBtn = document.getElementById('backMenuBtn');
 
-const state = {
-  start: QUIZ_META.min,
-  end: QUIZ_META.max,
-  mode: "ordered",
-  quizItems: [],
-  currentIndex: 0,
-  answers: {},
-};
+  const finalScore = document.getElementById('finalScore');
+  const finalRate = document.getElementById('finalRate');
+  const restartFromResultBtn = document.getElementById('restartFromResultBtn');
+  const retryRangeFromResultBtn = document.getElementById('retryRangeFromResultBtn');
+  const backMenuFromResultBtn = document.getElementById('backMenuFromResultBtn');
 
-function showScreen(target) {
-  [menuScreen, quizScreen, resultScreen].forEach((screen) => {
-    screen.classList.toggle("active", screen === target);
-  });
-}
+  const MIN_NO = 1201;
+  const MAX_NO = 1300;
+  const CHOICE_LABELS = ['A.', 'B.', 'C.', 'D.'];
 
-function setMode(mode) {
-  state.mode = mode;
-  orderedBtn.classList.toggle("active", mode === "ordered");
-  randomBtn.classList.toggle("active", mode === "random");
-}
+  let currentMode = 'order';
+  let currentSet = [];
+  let currentIndex = 0;
+  let userAnswers = [];
+  let lastSettings = null;
 
-function shuffleArray(array) {
-  const copied = [...array];
-  for (let i = copied.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copied[i], copied[j]] = [copied[j], copied[i]];
-  }
-  return copied;
-}
-
-function buildQuizItems() {
-  const filtered = WORD_DATA.filter((item) => item.serial >= state.start && item.serial <= state.end);
-  if (!filtered.length) return [];
-  return state.mode === "random" ? shuffleArray(filtered) : filtered;
-}
-
-function validateRange() {
-  const start = Number(startNumberInput.value);
-  const end = Number(endNumberInput.value);
-
-  if (!Number.isInteger(start) || !Number.isInteger(end)) {
-    alert("開始番号と終了番号を整数で入力してください。");
-    return null;
-  }
-  if (start < QUIZ_META.min || end > QUIZ_META.max) {
-    alert(`番号は${QUIZ_META.min}〜${QUIZ_META.max}の範囲で指定してください。`);
-    return null;
-  }
-  if (start > end) {
-    alert("開始番号は終了番号以下にしてください。");
-    return null;
-  }
-  return { start, end };
-}
-
-function startQuiz() {
-  const range = validateRange();
-  if (!range) return;
-
-  state.start = range.start;
-  state.end = range.end;
-  state.quizItems = buildQuizItems();
-  state.currentIndex = 0;
-  state.answers = {};
-
-  if (!state.quizItems.length) {
-    alert("指定された範囲に問題がありません。");
-    return;
+  function showScreen(screen) {
+    [menuScreen, quizScreen, resultScreen].forEach(section => section.classList.add('hidden'));
+    screen.classList.remove('hidden');
   }
 
-  renderQuestion();
-  showScreen(quizScreen);
-}
+  function setMode(mode) {
+    currentMode = mode;
+    modeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === mode));
+  }
 
-function getCurrentItem() {
-  return state.quizItems[state.currentIndex];
-}
-
-function updateScoreText() {
-  const answeredEntries = Object.values(state.answers).filter(Boolean);
-  const correctCount = answeredEntries.filter((entry) => entry.correct).length;
-  scoreText.textContent = `正解 ${correctCount} / ${answeredEntries.length}`;
-}
-
-function createChoiceButton(choiceText, item) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "choice-btn";
-  button.textContent = choiceText;
-
-  const existingAnswer = state.answers[item.serial];
-  if (existingAnswer) {
-    button.disabled = true;
-    if (choiceText === item.answer) {
-      button.classList.add("correct");
+  function shuffle(array) {
+    const cloned = [...array];
+    for (let i = cloned.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cloned[i], cloned[j]] = [cloned[j], cloned[i]];
     }
-    if (choiceText === existingAnswer.selected && choiceText !== item.answer) {
-      button.classList.add("wrong");
-    }
+    return cloned;
   }
 
-  button.addEventListener("click", () => handleAnswer(choiceText));
-  return button;
-}
+  function normalizeNumber(value) {
+    return Number(String(value).trim());
+  }
 
-function renderQuestion() {
-  const item = getCurrentItem();
-  if (!item) return;
+  function validateRange(start, end) {
+    if (Number.isNaN(start) || Number.isNaN(end)) {
+      alert('開始番号と終了番号を入力してください。');
+      return false;
+    }
+    if (start < MIN_NO || end > MAX_NO) {
+      alert(`範囲は ${MIN_NO}〜${MAX_NO} で指定してください。`);
+      return false;
+    }
+    if (start > end) {
+      alert('開始番号は終了番号以下にしてください。');
+      return false;
+    }
+    return true;
+  }
 
-  progressText.textContent = `${state.currentIndex + 1} / ${state.quizItems.length}`;
-  updateScoreText();
-  wordText.textContent = item.word;
-  wordNoText.textContent = `単語番号: ${item.wordNo}`;
-  choicesWrap.innerHTML = "";
-  item.options.forEach((option) => {
-    choicesWrap.appendChild(createChoiceButton(option, item));
+  function buildQuestionSet(settings) {
+    const filtered = quizData.filter(item => item.no >= settings.start && item.no <= settings.end);
+    if (filtered.length === 0) {
+      alert('その範囲にはデータがありません。');
+      return null;
+    }
+    return settings.mode === 'random' ? shuffle(filtered) : [...filtered].sort((a, b) => a.no - b.no);
+  }
+
+  function getMenuSettings() {
+    const start = normalizeNumber(startInput.value);
+    const end = normalizeNumber(endInput.value);
+    if (!validateRange(start, end)) return null;
+    return { start, end, mode: currentMode };
+  }
+
+  function startQuiz(useLastSettings = false) {
+    const settings = useLastSettings && lastSettings ? { ...lastSettings } : getMenuSettings();
+    if (!settings) return;
+
+    startInput.value = settings.start;
+    endInput.value = settings.end;
+    setMode(settings.mode);
+
+    const questionSet = buildQuestionSet(settings);
+    if (!questionSet) return;
+
+    lastSettings = { ...settings };
+    currentSet = questionSet;
+    currentIndex = 0;
+    userAnswers = currentSet.map(() => null);
+
+    showScreen(quizScreen);
+    renderQuestion();
+  }
+
+  function calculateScore() {
+    return userAnswers.reduce((total, answer, index) => {
+      const item = currentSet[index];
+      return answer && item && answer === item.meaning ? total + 1 : total;
+    }, 0);
+  }
+
+  function renderQuestion() {
+    const item = currentSet[currentIndex];
+    if (!item) return;
+
+    const selectedAnswer = userAnswers[currentIndex];
+    const answered = selectedAnswer !== null;
+
+    progressText.textContent = `${currentIndex + 1} / ${currentSet.length}`;
+    progressBar.style.width = `${((currentIndex + 1) / currentSet.length) * 100}%`;
+    scoreText.textContent = `Score: ${calculateScore()}`;
+    questionNo.textContent = `No.${item.no}`;
+    wordText.textContent = item.word;
+
+    choices.innerHTML = '';
+    item.choices.forEach((choice, index) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'choiceBtn';
+      btn.innerHTML = `<span class="choiceLabel">${CHOICE_LABELS[index]}</span><span>${choice}</span>`;
+
+      if (!answered) {
+        btn.addEventListener('click', () => handleAnswer(choice));
+      } else {
+        btn.disabled = true;
+        if (choice === selectedAnswer) btn.classList.add('selected');
+        if (choice === item.meaning) btn.classList.add('correct');
+        if (choice === selectedAnswer && choice !== item.meaning) btn.classList.add('wrong');
+      }
+
+      choices.appendChild(btn);
+    });
+
+    if (!answered) {
+      feedback.className = 'feedback hidden';
+      feedback.innerHTML = '';
+    } else {
+      renderFeedback(item, selectedAnswer);
+    }
+
+    prevBtn.disabled = currentIndex === 0;
+    nextBtn.textContent = currentIndex === currentSet.length - 1 ? '結果へ' : '次へ';
+  }
+
+  function renderFeedback(item, selectedAnswer) {
+    const isCorrect = selectedAnswer === item.meaning;
+    feedback.className = `feedback ${isCorrect ? 'correct' : 'wrong'}`;
+    feedback.innerHTML = `
+      <div class="feedbackState">${isCorrect ? '○ 正解！' : '× 不正解'}</div>
+      <div class="feedbackAnswer">正解：${item.meaning}</div>
+      <div class="feedbackBlock">
+        <span class="feedbackLabel">例文</span>
+        <div>${item.sentence}</div>
+      </div>
+      <div class="feedbackBlock">
+        <span class="feedbackLabel">和訳</span>
+        <div>${item.translation}</div>
+      </div>
+    `;
+    scoreText.textContent = `Score: ${calculateScore()}`;
+  }
+
+  function handleAnswer(choice) {
+    if (userAnswers[currentIndex] !== null) return;
+    userAnswers[currentIndex] = choice;
+    renderQuestion();
+  }
+
+  function goPrev() {
+    if (currentIndex === 0) return;
+    currentIndex -= 1;
+    renderQuestion();
+  }
+
+  function goNext() {
+    if (currentIndex === currentSet.length - 1) {
+      showResults();
+      return;
+    }
+    currentIndex += 1;
+    renderQuestion();
+  }
+
+  function showResults() {
+    const score = calculateScore();
+    const total = currentSet.length;
+    const rate = total ? Math.round((score / total) * 100) : 0;
+    finalScore.textContent = `${score} / ${total}`;
+    finalRate.textContent = `正答率 ${rate}%`;
+    showScreen(resultScreen);
+  }
+
+  function returnToMenu() {
+    if (lastSettings) {
+      startInput.value = lastSettings.start;
+      endInput.value = lastSettings.end;
+      setMode(lastSettings.mode);
+    }
+    showScreen(menuScreen);
+  }
+
+  function speakCurrentWord() {
+    const item = currentSet[currentIndex];
+    if (!item || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(item.word);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.95;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  modeButtons.forEach(btn => {
+    btn.addEventListener('click', () => setMode(btn.dataset.mode));
   });
 
-  const answerState = state.answers[item.serial];
-  if (answerState) {
-    showFeedback(item, answerState.correct);
-  } else {
-    hideFeedback();
-  }
+  startBtn.addEventListener('click', () => startQuiz(false));
+  prevBtn.addEventListener('click', goPrev);
+  nextBtn.addEventListener('click', goNext);
+  speakBtn.addEventListener('click', speakCurrentWord);
+  restartBtn.addEventListener('click', () => startQuiz(true));
+  restartFromResultBtn.addEventListener('click', () => startQuiz(true));
+  retryRangeBtn.addEventListener('click', returnToMenu);
+  retryRangeFromResultBtn.addEventListener('click', returnToMenu);
+  backMenuBtn.addEventListener('click', returnToMenu);
+  backMenuFromResultBtn.addEventListener('click', returnToMenu);
 
-  prevBtn.disabled = state.currentIndex === 0;
-  nextBtn.textContent = state.currentIndex === state.quizItems.length - 1 ? "結果を見る" : "次へ";
-}
-
-function hideFeedback() {
-  feedbackPanel.classList.add("hidden");
-  resultBadge.className = "result-badge";
-  resultBadge.textContent = "";
-  correctAnswerText.textContent = "";
-  exampleText.textContent = "";
-  translationText.textContent = "";
-}
-
-function showFeedback(item, isCorrect) {
-  feedbackPanel.classList.remove("hidden");
-  resultBadge.className = `result-badge ${isCorrect ? "correct" : "wrong"}`;
-  resultBadge.textContent = isCorrect ? "正解！" : "不正解";
-  correctAnswerText.textContent = `正解：${item.answer}（単語番号: ${item.wordNo}）`;
-  exampleText.textContent = item.example;
-  translationText.textContent = item.translation;
-}
-
-function handleAnswer(selectedChoice) {
-  const item = getCurrentItem();
-  if (state.answers[item.serial]) return;
-
-  const isCorrect = selectedChoice === item.answer;
-  state.answers[item.serial] = {
-    selected: selectedChoice,
-    correct: isCorrect,
-  };
-
-  renderQuestion();
-}
-
-function goNext() {
-  const atLast = state.currentIndex === state.quizItems.length - 1;
-  if (atLast) {
-    showResult();
-    return;
-  }
-  state.currentIndex += 1;
-  renderQuestion();
-}
-
-function goPrev() {
-  if (state.currentIndex === 0) return;
-  state.currentIndex -= 1;
-  renderQuestion();
-}
-
-function showResult() {
-  const total = state.quizItems.length;
-  const correct = Object.values(state.answers).filter((entry) => entry && entry.correct).length;
-  const rate = total ? Math.round((correct / total) * 100) : 0;
-
-  finalScoreText.textContent = `${correct} / ${total} 問正解`;
-  finalRateText.textContent = `正答率：${rate}%`;
-  showScreen(resultScreen);
-}
-
-function restartSameSettings() {
-  startQuiz();
-}
-
-function backToMenu(resetRange = false) {
-  if (resetRange) {
-    startNumberInput.value = QUIZ_META.min;
-    endNumberInput.value = QUIZ_META.max;
-  } else {
-    startNumberInput.value = state.start;
-    endNumberInput.value = state.end;
-  }
   showScreen(menuScreen);
-}
-
-function speakCurrentWord() {
-  const item = getCurrentItem();
-  if (!item || !window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(item.word);
-  utterance.lang = "en-US";
-  utterance.rate = 0.95;
-  window.speechSynthesis.speak(utterance);
-}
-
-orderedBtn.addEventListener("click", () => setMode("ordered"));
-randomBtn.addEventListener("click", () => setMode("random"));
-startQuizBtn.addEventListener("click", startQuiz);
-prevBtn.addEventListener("click", goPrev);
-nextBtn.addEventListener("click", goNext);
-restartSameBtn.addEventListener("click", restartSameSettings);
-restartNewBtn.addEventListener("click", () => backToMenu(true));
-restartSameResultBtn.addEventListener("click", restartSameSettings);
-restartNewResultBtn.addEventListener("click", () => backToMenu(true));
-speakBtn.addEventListener("click", speakCurrentWord);
-menuBackButtons.forEach((button) => {
-  button.addEventListener("click", () => backToMenu(false));
-});
-
-showScreen(menuScreen);
-setMode("ordered");
-
 }
