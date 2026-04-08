@@ -1,3 +1,7 @@
+if (!window.__authOK) {
+  throw new Error("Unauthorized: quiz initialization blocked");
+}
+
 const menuScreen = document.getElementById("menuScreen");
 const quizScreen = document.getElementById("quizScreen");
 const resultScreen = document.getElementById("resultScreen");
