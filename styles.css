@@ -1,1 +1,219 @@
-body{font-family:sans-serif;}
+*{box-sizing:border-box}
+:root{
+  --bg:#f4f7fb;
+  --card:#ffffff;
+  --line:#dbe5ef;
+  --text:#22313f;
+  --muted:#617283;
+  --primary:#355c7d;
+  --primary-soft:#e7eff6;
+  --correct:#dff4e4;
+  --correct-line:#89c59a;
+  --wrong:#fde7e4;
+  --wrong-line:#df9a92;
+}
+body{
+  margin:0;
+  font-family:"Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
+  color:var(--text);
+  background:linear-gradient(180deg,#eef3f8 0%,#f8fafc 100%);
+}
+.page-shell{
+  max-width:920px;
+  margin:0 auto;
+  padding:26px 16px 20px;
+}
+.site-header{
+  text-align:center;
+  margin-bottom:22px;
+}
+.site-header h1{
+  margin:0 0 8px;
+  font-size:clamp(1.8rem,3.3vw,2.5rem);
+}
+.subtitle{
+  margin:0;
+  color:var(--muted);
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:0 10px 28px rgba(28,53,77,.08);
+  padding:22px;
+}
+.menu-card{
+  max-width:620px;
+  margin:0 auto;
+}
+.hidden{display:none!important}
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+  margin:18px 0;
+}
+label span{
+  display:block;
+  font-weight:700;
+  margin-bottom:8px;
+}
+input[type="number"]{
+  width:100%;
+  padding:12px 14px;
+  border:1px solid #c7d3df;
+  border-radius:12px;
+  font-size:16px;
+  background:#fff;
+}
+.mode-group p{
+  margin:0 0 10px;
+  font-weight:700;
+}
+.mode-buttons, .menu-row, .nav-row, .action-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+button{
+  border:none;
+  border-radius:12px;
+  padding:12px 16px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  transition:.18s ease;
+}
+button:hover{transform:translateY(-1px);filter:brightness(.98)}
+.mode-btn, .ghost-btn, .sound-btn{
+  background:#eef3f8;
+  color:var(--text);
+}
+.mode-btn.active{
+  background:var(--primary);
+  color:#fff;
+}
+.primary-btn{
+  width:100%;
+  justify-content:center;
+  background:var(--primary);
+  color:#fff;
+  padding:14px 18px;
+}
+.quiz-card{
+  max-width:760px;
+  margin:0 auto;
+}
+.quiz-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:16px;
+}
+.progress-wrap{
+  flex:1;
+}
+#progressText{
+  font-weight:700;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+.progress-bar{
+  width:100%;
+  height:10px;
+  border-radius:999px;
+  background:#e8eef5;
+  overflow:hidden;
+}
+#progressFill{
+  width:0%;
+  height:100%;
+  background:var(--primary);
+  transition:width .2s ease;
+}
+.word-line{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:8px 0 18px;
+}
+#word{
+  margin:0;
+  font-size:clamp(2rem,4vw,2.8rem);
+  letter-spacing:.02em;
+}
+.sound-btn{
+  min-width:48px;
+  min-height:48px;
+  border-radius:999px;
+}
+.choices{
+  display:grid;
+  gap:10px;
+}
+.choice-btn{
+  width:100%;
+  text-align:left;
+  padding:14px 16px;
+  background:#f7fafc;
+  border:1px solid #d7e1eb;
+  color:var(--text);
+}
+.choice-btn.correct{
+  background:var(--correct);
+  border-color:var(--correct-line);
+}
+.choice-btn.wrong{
+  background:var(--wrong);
+  border-color:var(--wrong-line);
+}
+.choice-btn:disabled{
+  opacity:1;
+  cursor:default;
+}
+.feedback{
+  margin-top:16px;
+  padding:14px 16px;
+  border-radius:14px;
+  background:#f8fbfe;
+  border:1px solid var(--line);
+  line-height:1.75;
+}
+.feedback-status{
+  font-weight:800;
+  margin-bottom:6px;
+}
+.feedback-answer{
+  margin-bottom:8px;
+}
+.nav-row{
+  margin-top:16px;
+}
+.menu-row{
+  margin-top:12px;
+}
+.result-card{
+  max-width:620px;
+  margin:0 auto;
+  text-align:center;
+}
+#scoreText{
+  font-size:1.2rem;
+  font-weight:700;
+  margin:10px 0 18px;
+}
+.site-footer{
+  text-align:center;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.7;
+  margin-top:18px;
+}
+@media (max-width:640px){
+  .form-grid{grid-template-columns:1fr}
+  .quiz-top, .word-line{flex-direction:column; align-items:flex-start}
+  .sound-btn{align-self:flex-start}
+  .menu-row button, .nav-row button{width:100%}
+}
