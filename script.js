@@ -1,7 +1,6 @@
 if (!window.__authOK) {
-  throw new Error("Unauthorized: quiz initialization blocked");
-}
-
+  // 誤入力・空欄・キャンセル時はクイズ初期化を行わない
+} else {
 const menuScreen = document.getElementById("menuScreen");
 const quizScreen = document.getElementById("quizScreen");
 const resultScreen = document.getElementById("resultScreen");
@@ -37,18 +36,6 @@ const restartSameResultBtn = document.getElementById("restartSameResultBtn");
 const restartNewResultBtn = document.getElementById("restartNewResultBtn");
 const finalScoreText = document.getElementById("finalScoreText");
 const finalRateText = document.getElementById("finalRateText");
-
-const QUIZ_META = { min: 1201, max: 1300 };
-
-const WORD_DATA = quizData.map((item) => ({
-  serial: item.no,
-  wordNo: item.no,
-  word: item.word,
-  answer: item.meaning,
-  options: item.choices,
-  example: item.sentence,
-  translation: item.translation
-}));
 
 const state = {
   start: QUIZ_META.min,
@@ -277,3 +264,5 @@ menuBackButtons.forEach((button) => {
 
 showScreen(menuScreen);
 setMode("ordered");
+
+}
